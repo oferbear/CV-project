@@ -4,6 +4,7 @@ import os
 import torch
 from PIL import Image
 from torch.utils.data import Dataset
+from typing import Tuple
 
 
 class FacesDataset(Dataset):
@@ -22,14 +23,24 @@ class FacesDataset(Dataset):
         self.real_image_names = os.listdir(os.path.join(self.root_path, 'real'))
         self.fake_image_names = os.listdir(os.path.join(self.root_path, 'fake'))
         self.transform = transform
+        self.type = {'real': 0, 'fake': 1}
 
-    def __getitem__(self, index) -> tuple[torch.Tensor, int]:
+    def __getitem__(self, index) -> Tuple[torch.Tensor, int]:
         """Get a sample and label from the dataset."""
-        """INSERT YOUR CODE HERE, overrun return."""
-
-        return torch.rand((3, 256, 256)), int(torch.randint(0, 2, size=(1, )))
+        if index >= self.__len__():
+            raise IndexError("Exceeded dataset size")
+        if index < len(self.real_image_names):
+            current_used_data = self.real_image_names
+            label = "real"
+        else:
+            current_used_data = self.fake_image_names
+            index %= len(self.real_image_names)
+            label = "fake"
+        with Image.open(os.path.join(self.root_path, label, current_used_data[index])) as sample:
+            if self.transform:
+                sample = self.transform(sample)
+            return sample, self.type[label]
 
     def __len__(self):
         """Return the number of images in the dataset."""
-        """INSERT YOUR CODE HERE, overrun return."""
-        return 100
+        return len(self.real_image_names) + len(self.fake_image_names)
