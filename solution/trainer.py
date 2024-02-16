@@ -6,6 +6,7 @@ from dataclasses import dataclass
 import torch
 from torch import nn
 from torch.utils.data import Dataset, DataLoader
+from typing import Tuple
 
 from common import OUTPUT_DIR, CHECKPOINT_DIR
 
@@ -41,7 +42,7 @@ class Trainer:
         self.test_dataset = test_dataset
         self.epoch = 0
 
-    def train_one_epoch(self) -> tuple[float, float]:
+    def train_one_epoch(self) -> Tuple[float, float]:
         """Train the model for a single epoch on the training dataset.
         Returns:
             (avg_loss, accuracy): tuple containing the average loss and
@@ -59,8 +60,17 @@ class Trainer:
                                       shuffle=True)
         print_every = int(len(train_dataloader) / 10)
 
+        losses = []
         for batch_idx, (inputs, targets) in enumerate(train_dataloader):
             """INSERT YOUR CODE HERE."""
+            self.optimizer.zero_grad()
+            predictions = self.model.forward(inputs)
+            loss = self.criterion(predictions, targets)
+            avg_loss = loss.item()
+            # accuracy = self.model.
+            loss.backward()
+            # TODO: loss? accuracy? average?
+            self.optimizer.step()
             if batch_idx % print_every == 0 or \
                     batch_idx == len(train_dataloader) - 1:
                 print(f'Epoch [{self.epoch:03d}] | Loss: {avg_loss:.3f} | '
@@ -70,7 +80,7 @@ class Trainer:
         return avg_loss, accuracy
 
     def evaluate_model_on_dataloader(
-            self, dataset: torch.utils.data.Dataset) -> tuple[float, float]:
+            self, dataset: torch.utils.data.Dataset) -> Tuple[float, float]:
         """Evaluate model loss and accuracy for dataset.
 
         Args:
