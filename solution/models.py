@@ -31,6 +31,7 @@ class SimpleNet(nn.Module):
         fully_connected_first_out = F.relu(self.fc1(flattened_features))
         fully_connected_second_out = F.relu(self.fc2(fully_connected_first_out))
         two_way_output = self.fc3(fully_connected_second_out)
+        two_way_output = F.softmax(two_way_output)
         return two_way_output
 
 
@@ -42,4 +43,14 @@ def get_xception_based_model() -> nn.Module:
     classification head stated in the exercise.
     """
     """INSERT YOUR CODE HERE, overrun return."""
-    return SimpleNet()
+    custom_network = build_xception_backbone(pretrained=True)
+    custom_network.fc = nn.Sequential(
+                        nn.Linear(2048, 1000),
+                        nn.ReLU(),
+                        nn.Linear(1000, 256),
+                        nn.ReLU(),
+                        nn.Linear(256, 64),
+                        nn.ReLU(),
+                        nn.Linear(64, 2)
+                    )
+    return custom_network

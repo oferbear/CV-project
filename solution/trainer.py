@@ -3,6 +3,7 @@ import os
 import json
 from dataclasses import dataclass
 
+import numpy as np
 import torch
 from torch import nn
 from torch.utils.data import Dataset, DataLoader
@@ -61,15 +62,22 @@ class Trainer:
         print_every = int(len(train_dataloader) / 10)
 
         losses = []
+        all_predictions = []
+        all_targets = []
         for batch_idx, (inputs, targets) in enumerate(train_dataloader):
             """INSERT YOUR CODE HERE."""
             self.optimizer.zero_grad()
             predictions = self.model.forward(inputs)
+
+            all_predictions.append(predictions)
+            all_targets.append(targets)
+
             loss = self.criterion(predictions, targets)
             avg_loss = loss.item()
-            # accuracy = self.model.
+            correct_labeled_samples = torch.sum(torch.argmax(predictions, dim=1) == targets)
+            nof_samples = len(predictions)
+            accuracy = correct_labeled_samples / len(predictions)
             loss.backward()
-            # TODO: loss? accuracy? average?
             self.optimizer.step()
             if batch_idx % print_every == 0 or \
                     batch_idx == len(train_dataloader) - 1:
@@ -77,6 +85,10 @@ class Trainer:
                       f'Acc: {accuracy:.2f}[%] '
                       f'({correct_labeled_samples}/{nof_samples})')
 
+        all_predictions = torch.cat(all_predictions)
+        all_targets = torch.cat(all_targets)
+        accuracy = (torch.sum((torch.argmax(all_predictions, dim=1) == all_targets).float()) / len(all_predictions)).item()
+        avg_loss = self.criterion(all_predictions, all_targets).item()
         return avg_loss, accuracy
 
     def evaluate_model_on_dataloader(
@@ -101,13 +113,30 @@ class Trainer:
         correct_labeled_samples = 0
         print_every = max(int(len(dataloader) / 10), 1)
 
+        all_predictions = []
+        all_targets = []
         for batch_idx, (inputs, targets) in enumerate(dataloader):
-            """INSERT YOUR CODE HERE."""
+            with torch.no_grad():
+                predictions = self.model.forward(inputs)
+
+                all_predictions.append(predictions)
+                all_targets.append(targets)
+
+                loss = self.criterion(predictions, targets)
+                avg_loss = loss.item()
+                correct_labeled_samples = torch.sum(torch.argmax(predictions, dim=1) == targets)
+                nof_samples = len(predictions)
+                accuracy = correct_labeled_samples / len(predictions)
+
             if batch_idx % print_every == 0 or batch_idx == len(dataloader) - 1:
                 print(f'Epoch [{self.epoch:03d}] | Loss: {avg_loss:.3f} | '
                       f'Acc: {accuracy:.2f}[%] '
                       f'({correct_labeled_samples}/{nof_samples})')
 
+        all_predictions = torch.cat(all_predictions)
+        all_targets = torch.cat(all_targets)
+        accuracy = (torch.sum((torch.argmax(all_predictions, dim=1) == all_targets).float()) / len(all_predictions)).item()
+        avg_loss = self.criterion(all_predictions, all_targets).item()
         return avg_loss, accuracy
 
     def validate(self):

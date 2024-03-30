@@ -58,7 +58,26 @@ def get_soft_scores_and_true_labels(dataset, model):
         gt_labels: an iterable holding the samples' ground truth labels.
     """
     """INSERT YOUR CODE HERE, overrun return."""
-    return torch.rand(100, ), torch.rand(100, ), torch.randint(0, 2, (100, ))
+
+    batch_size = int(len(dataset) / 50)
+    print(batch_size)
+    dataloader = DataLoader(dataset, batch_size, shuffle=True)
+    all_first_soft_scores = []
+    all_second_soft_scores = []
+    gt_labels = []
+    for inputs, targets in dataloader:
+        inputs, targets = inputs.to(device), targets.to(device)
+        model = model.to(device)
+
+        output = model(inputs).sigmoid()
+        all_first_soft_scores += output[:, 0].tolist()
+        all_second_soft_scores += output[:, 1].tolist()
+        gt_labels += targets.tolist()
+
+    return all_first_soft_scores, all_second_soft_scores, gt_labels
+
+
+    #return torch.rand(100, ), torch.rand(100, ), torch.randint(0, 2, (100, ))
 
 
 def plot_roc_curve(roc_curve_figure,
