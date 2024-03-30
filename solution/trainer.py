@@ -66,6 +66,9 @@ class Trainer:
         all_targets = []
         for batch_idx, (inputs, targets) in enumerate(train_dataloader):
             """INSERT YOUR CODE HERE."""
+            inputs = inputs.to(device)
+            targets = targets.to(device)
+
             self.optimizer.zero_grad()
             predictions = self.model.forward(inputs)
 
@@ -116,6 +119,9 @@ class Trainer:
         all_predictions = []
         all_targets = []
         for batch_idx, (inputs, targets) in enumerate(dataloader):
+            inputs = inputs.to(device)
+            targets = targets.to(device)
+        
             with torch.no_grad():
                 predictions = self.model.forward(inputs)
 
